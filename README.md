@@ -1,155 +1,98 @@
-# Siri Reservation Status MVP
+# Siri Summer Villa MVP
 
-Minimal NestJS prototype for this flow:
+Minimal NestJS API for Siri Shortcuts managing summer villa reservations, payments, room status, cleaning, and guest lookup. Every Siri endpoint returns a top-level `summary` string for Apple Shortcuts `Speak Text`.
 
-`Siri -> Apple Shortcut -> GET /reservations/status -> summary spoken aloud`
+## Install and Run
 
-## Project Structure
-
-```text
-.
-|-- package.json
-|-- nest-cli.json
-|-- tsconfig.json
-|-- tsconfig.build.json
-|-- src
-|   |-- main.ts
-|   |-- app.module.ts
-|   `-- reservations
-|       |-- reservations.module.ts
-|       |-- reservations.controller.ts
-|       |-- reservations.service.ts
-|       `-- types
-|           `-- reservation-status-response.type.ts
-`-- README.md
-```
-
-## Install
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-## Run Locally
+Run in development:
 
 ```bash
 npm run start:dev
 ```
 
-The API will be available at:
+The local API runs at `http://localhost:3000`.
+
+## Project Structure
 
 ```text
-http://localhost:3000/reservations/status
+src/
+  common/utils/    date, money, and summary helpers
+  data/            hardcoded mock guests, rooms, and reservations
+  guests/          guest search, details, stay, payments, contact card
+  payments/        pending payments and revenue summary
+  reservations/    daily overview, check-ins, and check-outs
+  rooms/           room status and date availability
+  tasks/           cleaning tasks
+  types/           shared TypeScript models and API response types
 ```
 
 ## Test with curl
 
 ```bash
 curl http://localhost:3000/reservations/status
+curl http://localhost:3000/reservations/check-ins/today
+curl http://localhost:3000/reservations/check-outs/today
+curl http://localhost:3000/reservations/check-ins/tomorrow
+curl http://localhost:3000/payments/pending
+curl http://localhost:3000/payments/summary?period=this_week
+curl http://localhost:3000/rooms/status
+curl "http://localhost:3000/rooms/availability?date=2026-06-15"
+curl http://localhost:3000/tasks/cleaning/today
+curl "http://localhost:3000/guests/search?name=Maria%20Georgieva"
+curl http://localhost:3000/guests/1
+curl http://localhost:3000/guests/1/current-stay
+curl http://localhost:3000/guests/1/payments
+curl http://localhost:3000/guests/1/contact-card
 ```
 
-## Run with Docker
-
-Build the image:
-
-```bash
-docker build -t siri-reservation-status-mvp .
-```
-
-Run the container:
-
-```bash
-docker run --rm -p 3000:3000 siri-reservation-status-mvp
-```
-
-The API will then be available at:
-
-```text
-http://localhost:3000/reservations/status
-```
+Guest search uses exact full-name matching in this MVP, so use `Maria Georgieva` rather than `Maria`.
 
 ## Expose with ngrok
 
 1. Install ngrok from https://ngrok.com/downloads
-2. Start the NestJS app:
-
-```bash
-npm run start:dev
-```
-
-3. In a second terminal, expose port 3000:
+2. Start the API with `npm run start:dev`
+3. In a second terminal run:
 
 ```bash
 ngrok http 3000
 ```
 
-4. Copy the public HTTPS URL from ngrok, for example:
+4. Copy the public HTTPS URL, for example `https://abc123.ngrok-free.app`
+5. Point your Shortcut URL to `https://abc123.ngrok-free.app/reservations/status`
 
-```text
-https://abc123.ngrok-free.app
-```
+## Create a Siri Shortcut
 
-5. Your Shortcut should call:
+1. Create a new Shortcut on iPhone.
+2. Add `URL` with one API endpoint.
+3. Add `Get Contents of URL`.
+4. Add `Get Dictionary Value` with key `summary`.
+5. Add `Speak Text`.
 
-```text
-https://abc123.ngrok-free.app/reservations/status
-```
+Suggested Shortcut names:
 
-## Apple Shortcut Setup
-
-Create a new Shortcut on iPhone, for example named:
-
-```text
-Reservation Status
-```
-
-Suggested Siri phrase:
-
-```text
-Give me reservation status
-```
-
-### Shortcut steps
-
-1. Add `Get Contents of URL`
-2. Set URL to:
-
-```text
-https://YOUR-NGROK-URL/reservations/status
-```
-
-3. Expand the action settings:
-   - Method: `GET`
-   - Request Body: `None`
-4. Add `Get Dictionary Value`
-   - Dictionary: `Get Contents of URL`
-   - Key: `summary`
-5. Add `Speak Text`
-   - Text: `Dictionary Value`
-
-When the Shortcut runs, Siri should speak the summary returned by the API.
-
-## Siri Test
-
-After saving the Shortcut, say:
-
-```text
-Hey Siri, give me reservation status
-```
-
-Expected result:
-
-1. Siri runs the Shortcut
-2. The Shortcut calls your ngrok URL
-3. NestJS returns the hardcoded JSON
-4. The Shortcut extracts `summary`
-5. Siri reads the summary aloud
+- Reservation Status
+- Today Check Ins
+- Today Check Outs
+- Pending Payments
+- Room Status
+- Find Guest Maria
+- Guest Info Maria
+- Contact Guest Maria
 
 ## Next Improvements
 
-- Add a real database
-- Add authentication or an API token
-- Add date filters such as `today` and `tomorrow`
-- Add endpoints for pending payments
-- Connect to a real booking or reservation system
-- Deploy the API publicly instead of relying on ngrok
+- Add SQLite or PostgreSQL
+- Add authentication with API key
+- Add admin dashboard
+- Add create/edit reservation endpoints
+- Add payment marking endpoint
+- Add cleaning task completion endpoint
+- Add Twilio/Viber/WhatsApp guest messaging
+- Add real booking platform integration
+- Add Bulgarian and English Siri summaries
